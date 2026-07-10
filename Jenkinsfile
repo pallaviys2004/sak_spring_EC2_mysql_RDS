@@ -6,55 +6,38 @@ pipeline {
     }
 
     stages {
-        stage('build stage') {
+
+        stage('Build') {
             steps {
                 sh 'mvn clean package'
             }
-            post {
-                success {
-                    echo "build success"
-                }
-                failure {
-                    echo "build failure"
-                }
-            }
         }
-        stage('build test') {
+
+        stage('Test') {
             steps {
                 sh 'mvn test'
             }
-            post {
-                success {
-                    echo "test success"
-                }
-                failure {
-                    echo "test failure"
-                }
-            }
         }
-        stage("Run the spring application") {
-            steps { 
-                sh '''
-                    echo "Stopping existing Spring Boot application if running..."
-                    if pgrep -f spring_app_sak-0.0.1-SNAPSHOT.jar > /dev/null; then
-                        sudo pkill -f spring_app_sak-0.0.1-SNAPSHOT.jar
-                        echo "Application stopped."
-                    else
-                        echo "No existing application running."
-                    fi
 
-                    echo "Starting the Spring Boot application..."
-                    sudo java -jar target/spring_app_sak-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
+        stage('Run Spring Boot Application') {
+            steps {
+                sh '''
+                    echo "Stopping existing application..."
+                    pkill -f spring_app_sak-0.0.1-SNAPSHOT.jar || true
+
+                    echo "Starting application..."
+                    nohup java -jar target/spring_app_sak-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
                 '''
             }
         }
     }
+
     post {
         success {
-            echo "pipeline success"
+            echo 'Pipeline Success'
         }
         failure {
-            echo "pipeline failure"
+            echo 'Pipeline Failed'
         }
     }
 }
